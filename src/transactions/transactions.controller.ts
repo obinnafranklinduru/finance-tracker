@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -66,6 +67,20 @@ export class TransactionsController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Get transaction summary for the current user' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: 'Start date for the summary (YYYY-MM-DD)',
+    example: '2024-01-01',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: 'End date for the summary (YYYY-MM-DD)',
+    example: '2024-12-31',
+  })
   @ApiResponse({
     status: 200,
     description: 'Transaction summary retrieved successfully',

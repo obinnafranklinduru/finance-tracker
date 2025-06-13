@@ -39,7 +39,6 @@ A comprehensive RESTful API built with NestJS for managing personal finances, in
 
 - [Installation](#-installation)
 - [Configuration](#configuration)
-- [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
 - [Authentication](#authentication)
@@ -56,13 +55,13 @@ A comprehensive RESTful API built with NestJS for managing personal finances, in
 
 - Node.js (v16 or higher)
 - npm or yarn
-- MySQL or SQLite database
+- Postgrel or SQLite database
 
 ### Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd financial-tracker-api
+git clone https://github.com/obinnafranklinduru/finance-tracker
+cd finance-tracker
 ```
 
 ### Install Dependencies
@@ -82,7 +81,7 @@ Create a `.env` file in the root directory:
 NODE_ENV=development
 PORT=3000
 
-# Database Configuration (MySQL)
+# Database Configuration (Postgrel)
 DB_HOST=localhost
 DB_PORT=3306
 DB_USERNAME=root
@@ -95,62 +94,8 @@ JWT_EXPIRES_IN=7d
 
 # API Configuration
 API_PREFIX=api/v1
+APP_ENCRYPTION_KEY=your-32-bytes-secret
 ```
-
-### Database Configuration
-
-The application supports both MySQL and SQLite databases. For development, SQLite is configured by default for simplicity.
-
-#### MySQL Configuration (Production)
-
-Update `src/app.module.ts` for MySQL:
-
-```typescript
-TypeOrmModule.forRoot({
-  type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  username: process.env.DB_USERNAME || 'root',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_DATABASE || 'financial_tracker',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
-}),
-```
-
-#### SQLite Configuration (Development)
-
-Current configuration in `src/app.module.ts`:
-
-```typescript
-TypeOrmModule.forRoot({
-  type: 'sqlite',
-  database: 'financial_tracker.db',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: true,
-  logging: process.env.NODE_ENV === 'development',
-}),
-```
-
-## 🗄️ Database Setup
-
-### Automatic Schema Creation
-
-The application uses TypeORM with `synchronize: true` in development mode, which automatically creates database tables based on entity definitions.
-
-### Seed Default Data
-
-Run the seeder to populate default categories:
-
-```bash
-npm run seed
-```
-
-This will create:
-
-- 15 default expense categories (Food & Dining, Transportation, etc.)
-- 10 default income categories (Salary, Freelance, etc.)
 
 ## 🚀 Running the Application
 
@@ -344,7 +289,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   password: string;       // Hashed password
   dateOfBirth?: Date;     // Optional date of birth
   currency: string;       // Default currency (USD)
-  timezone: string;       // User's timezone
   isActive: boolean;      // Account status
   createdAt: Date;        // Account creation date
   updatedAt: Date;        // Last update date
@@ -580,14 +524,6 @@ The API is designed to support multiple currencies:
 - Account-level currency specification
 - Currency conversion capabilities (requires external service integration)
 
-### Data Export
-
-Export financial data in various formats:
-
-- CSV export for transactions, budgets, and goals
-- PDF reports for financial summaries
-- JSON export for data migration
-
 ## 🚀 Deployment
 
 ### Docker Deployment
@@ -622,79 +558,28 @@ services:
     environment:
       - NODE_ENV=production
       - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USERNAME=root
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
       - DB_PASSWORD=password
       - DB_DATABASE=financial_tracker
       - JWT_SECRET=your-production-jwt-secret
+      - APP_ENCRYPTION_KEY=73cb430200b522c663c0b0c049b8a2071191e1d1f3e8cdf3a81861e6ae62061c
     depends_on:
       - db
 
   db:
-    image: mysql:8.0
+    image: postgres:15
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=financial_tracker
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=financial_tracker
+      - POSTGRES_USER=postgres
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - '3306:3306'
+      - '5432:5432'
 
-volumes:
-  mysql_data:
+volumes: postgres_data
 ```
-
-### Cloud Deployment
-
-#### Heroku Deployment
-
-1. Install Heroku CLI
-2. Create a new Heroku app:
-
-   ```bash
-   heroku create financial-tracker-api
-   ```
-
-3. Set environment variables:
-
-   ```bash
-   heroku config:set NODE_ENV=production
-   heroku config:set JWT_SECRET=your-production-jwt-secret
-   ```
-
-4. Add MySQL addon:
-
-   ```bash
-   heroku addons:create cleardb:ignite
-   ```
-
-5. Deploy:
-   ```bash
-   git push heroku main
-   ```
-
-#### AWS Deployment
-
-Deploy using AWS Elastic Beanstalk:
-
-1. Install EB CLI
-2. Initialize EB application:
-
-   ```bash
-   eb init
-   ```
-
-3. Create environment:
-
-   ```bash
-   eb create production
-   ```
-
-4. Set environment variables in AWS console
-5. Deploy:
-   ```bash
-   eb deploy
-   ```
 
 ### Environment-Specific Configuration
 
@@ -710,6 +595,8 @@ DB_PASSWORD=your-secure-db-password
 DB_DATABASE=financial_tracker
 JWT_SECRET=your-very-secure-jwt-secret-key
 JWT_EXPIRES_IN=7d
+APP_ENCRYPTION_KEY=64-bytes
+
 ```
 
 #### Staging Environment
@@ -723,43 +610,9 @@ DB_USERNAME=staging_user
 DB_PASSWORD=staging_password
 DB_DATABASE=financial_tracker_staging
 JWT_SECRET=your-staging-jwt-secret
+APP_ENCRYPTION_KEY=64-bytes
 JWT_EXPIRES_IN=1d
 ```
-
-## 🧪 Testing
-
-### Unit Tests
-
-Run unit tests:
-
-```bash
-npm run test
-```
-
-### Integration Tests
-
-Run integration tests:
-
-```bash
-npm run test:e2e
-```
-
-### Test Coverage
-
-Generate test coverage report:
-
-```bash
-npm run test:cov
-```
-
-### API Testing with Postman
-
-Import the Postman collection for comprehensive API testing:
-
-1. Export OpenAPI specification from Swagger UI
-2. Import into Postman
-3. Set up environment variables for authentication
-4. Run automated test suites
 
 ## 📈 Performance Optimization
 
@@ -808,7 +661,7 @@ Import the Postman collection for comprehensive API testing:
 2. Clone your fork:
 
    ```bash
-   git clone https://github.com/your-username/financial-tracker-api.git
+   git clone https://github.com/obinnafranklinduru/finance-tracker.git
    ```
 
 3. Install dependencies:
@@ -866,18 +719,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [API Documentation](http://localhost:3000/api/docs) - Interactive Swagger documentation
 - [GitHub Issues](https://github.com/your-repo/issues) - Bug reports and feature requests
-
-### Community
-
-- [Discord Server](https://discord.gg/your-server) - Community discussions
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/financial-tracker-api) - Technical questions
-
-### Professional Support
-
-For enterprise support and custom development:
-
-- Email: support@your-domain.com
-- Website: https://your-website.com
 
 ## 🙏 Acknowledgments
 
