@@ -299,7 +299,7 @@ The Financial Tracker API is a comprehensive RESTful API built with NestJS that 
 - **Total Files**: 50+ TypeScript files
 - **Entities**: 6 core entities with relationships
 - **API Endpoints**: 40+ RESTful endpoints
-- **Documentation**: 4 comprehensive guides
+- **Documentation**: 3 comprehensive guides
 - **Lines of Code**: 3000+ lines of production code
 
 ### Feature Coverage
